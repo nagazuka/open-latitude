@@ -5,6 +5,7 @@
  */
 package com.c2b2.openlatitude.entity;
 
+import java.io.Serializable;
 import java.util.Date;
 import java.util.Objects;
 
@@ -12,7 +13,7 @@ import java.util.Objects;
  *
  * @author shanny
  */
-public class Location {
+public class Location implements Serializable {
     
     private String userName;
     private Double latitude;
@@ -71,11 +72,11 @@ public class Location {
         this.latitude = latitude;
     }
 
-    public Double getDoubleitude() {
+    public Double getLongitude() {
         return longitude;
     }
 
-    public void setDoubleitude(Double longitude) {
+    public void setLongitude(Double longitude) {
         this.longitude = longitude;
     }
 

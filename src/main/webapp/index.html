@@ -1,19 +1,54 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>Start Page</title>
-        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-        <link rel="stylesheet" href="screen.css" />
+        <meta http-equiv="content-type" content="text/html;charset=utf-8" />
+        <meta name="viewport" content="width=device-width initial-scale=1.0 maximum-scale=1.0 user-scalable=yes" />
+
+        <meta name="robots" content="noindex, nofollow" />
+
+        <title>OpenLatitude</title>
+
+
+        <link type="text/css" rel="stylesheet" href="docs.css" />
+        <link type="text/css" rel="stylesheet" href="mmenu.css" />
+
+        <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/2.0.2/jquery.min.js"></script>
+        <script type="text/javascript" src="jquery.mmenu.min.js"></script>
+        <script type="text/javascript">
+            $(function() {
+                $('nav#menu').mmenu();
+            });
+        </script>
+
         <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.6.4/leaflet.css" />
         <!--[if lte IE 8]>
             <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.6.4/leaflet.ie.css" />
         <![endif]-->
         <script src="http://cdn.leafletjs.com/leaflet-0.6.4/leaflet.js"></script>
-        <script src="http://code.jquery.com/jquery-1.10.2.min.js"></script>        
     </head>
-    <body>                 
-        <div id="map"></div>
+    <body>
+        <div id="page">
+            <div id="header">
+                <a href="#menu"></a>
+                OpenLatitude
+            </div>
+            <div id="content">
+                <div id="map"></div>
+            </div>
+            <nav id="menu">
+                <ul>
+                    <li class="Selected"><a href="index_old.html">You</a></li>
+                    <!--
+                    <li><a href="horizontal-submenus.html">Horizontal sliding submenus example</a></li>
+                    <li><a href="vertical-submenus.html">Vertical submenus example</a></li>
+                    <li><a href="onepage.html">One page scrolling example</a></li>
+                    <li><a href="iconbar.html">Iconbar</a></li>
+                    <li><a href="dragopen.html">Drag/swipe the menu open</a></li> 
+                    -->
+                </ul>
+            </nav>
+        </div>
+
         <script type="text/javascript">
             var map = L.map('map');
 
@@ -22,7 +57,36 @@
                 attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery Â© <a href="http://cloudmade.com">CloudMade</a>'
             }).addTo(map);
 
-            var userName = "shanny";
+            function getUserName() {
+                if (localStorage) {
+                    var u = localStorage.getItem("userName");
+                    return u ? u : askUserName();                           
+                } else {
+                    //TODO: Use other storage mechanism
+                    return "Lazy Programmer";
+                }                
+            }
+            
+            function clearUserName() {
+                console.log("Clearing username");
+                if (localStorage) {
+                    localStorage.removeItem("userName");
+                }                
+            }
+
+            function askUserName() {
+                var response = prompt('What is your name?')
+                
+                while (!response) {
+                    response = prompt('We really need your name, sir / madam')
+                }
+            
+                if (localStorage) {
+                    localStorage.setItem("userName", response);
+                }
+                
+                return response;
+            }
 
             function updateServer(e) {
                 var latlng = e.latlng;
@@ -31,9 +95,8 @@
                 var acc = e.accuracy;
 
                 console.log('latlng [' + e.latlng + '] accuracy [' + e.accuracy + '] lat [' + latlng.lat + ']' + '] lng [' + latlng.lng + ']');
-                
-                var data = JSON.stringify({userName: userName, latitude: lat, longitude: lng, accuracy: acc});
-                //$.post("/openlatitude/api/location/update", { name: userName, latitude: lat, longitude: lng } );                
+
+                var data = JSON.stringify({userName: getUserName(), latitude: lat, longitude: lng, accuracy: acc});
 
                 $.ajax({
                     url: "/openlatitude/api/location/update",
@@ -47,6 +110,27 @@
                 });
             }
 
+            function retrieveUsers() {
+                $.ajax({
+                    url: "/openlatitude/api/users/",
+                    type: "GET",
+                    contentType: "application/json; charset=utf-8",
+                    dataType: "json",
+                    success: function(data) {
+                        var myUserName = getUserName();
+                        
+                        console.log('retrieve users request done: %j', data);
+                        for (i in data) {
+                            var name = data[i].userName;
+                            if (name && name != myUserName)
+                                $("nav>ul").append('<li><a href="advanced.html">' + name + '</a></li>');
+                        }
+                        $("nav>ul").append('<li><a href="javascript:clearUserName()">Is this not ' + myUserName + '?</a></li>');
+                    }
+                });
+                
+            }
+
             function onLocationFound(e) {
                 var radius = e.accuracy / 2;
 
@@ -56,6 +140,7 @@
                 L.circle(e.latlng, radius).addTo(map);
 
                 updateServer(e);
+                retrieveUsers();
             }
 
             function onLocationError(e) {
@@ -66,6 +151,13 @@
             map.on('locationerror', onLocationError);
 
             map.locate({setView: true, maxZoom: 16});
+
+            $("#nav").mmenu({
+                // options go here...
+            });
+
         </script>
+
+
     </body>
 </html>

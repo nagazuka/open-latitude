@@ -29,8 +29,8 @@ public class ApplicationConfig extends Application {
      * If required, comment out calling this method in getClasses().
      */
     private void addRestResourceClasses(Set<Class<?>> resources) {
-        resources.add(com.c2b2.openlatitude.service.LatitudeUserService.class);
         resources.add(com.c2b2.openlatitude.service.LocationService.class);
+        resources.add(com.c2b2.openlatitude.service.UserService.class);
     }
     
 }
