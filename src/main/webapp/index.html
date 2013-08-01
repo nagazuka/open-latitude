@@ -14,7 +14,10 @@
 
         <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/2.0.2/jquery.min.js"></script>
         <script type="text/javascript" src="jquery.mmenu.min.js"></script>
+        <script type="text/javascript" src="moment.min.js"></script>
+
         <script type="text/javascript">
+
             $(function() {
                 $('nav#menu').mmenu();
             });
@@ -37,7 +40,7 @@
             </div>
             <nav id="menu">
                 <ul>
-                    <li class="Selected"><a href="index_old.html">You</a></li>
+                    <li id="userLink" class="Selected"><a href="index.html">You</a></li>
                     <!--
                     <li><a href="horizontal-submenus.html">Horizontal sliding submenus example</a></li>
                     <li><a href="vertical-submenus.html">Vertical submenus example</a></li>
@@ -60,31 +63,31 @@
             function getUserName() {
                 if (localStorage) {
                     var u = localStorage.getItem("userName");
-                    return u ? u : askUserName();                           
+                    return u ? u : askUserName();
                 } else {
                     //TODO: Use other storage mechanism
                     return "Lazy Programmer";
-                }                
+                }
             }
-            
+
             function clearUserName() {
                 console.log("Clearing username");
                 if (localStorage) {
                     localStorage.removeItem("userName");
-                }                
+                }
             }
 
             function askUserName() {
                 var response = prompt('What is your name?')
-                
+
                 while (!response) {
                     response = prompt('We really need your name, sir / madam')
                 }
-            
+
                 if (localStorage) {
                     localStorage.setItem("userName", response);
                 }
-                
+
                 return response;
             }
 
@@ -110,25 +113,43 @@
                 });
             }
 
+            function formatDate(dateStr) {
+                var res = "";
+                if (dateStr) {
+                    var m = moment(dateStr);
+                    res = moment().format("dddd, MMMM Do YYYY, h:mm:ss a");
+                }
+                return res;
+            }
+
             function retrieveUsers() {
                 $.ajax({
-                    url: "/openlatitude/api/users/",
+                    url: "/openlatitude/api/location/all/",
                     type: "GET",
                     contentType: "application/json; charset=utf-8",
                     dataType: "json",
                     success: function(data) {
                         var myUserName = getUserName();
-                        
+
                         console.log('retrieve users request done: %j', data);
                         for (i in data) {
                             var name = data[i].userName;
+                            var lat = data[i].latitude;
+                            var lng = data[i].longitude;
+                            var accuracy = data[i].accuracy;
+                            var lastUpdated = formatDate(data[i].lastUpdated);
+
                             if (name && name != myUserName)
-                                $("nav>ul").append('<li><a href="advanced.html">' + name + '</a></li>');
+                                $("nav>ul").append('<li><a href="advanced.html">' + name + '    <span class="lastUpdate">' + lastUpdated + '</span></a></li>');
+                            else
+                                $("#userLink").html('<a href="">You    <span class="lastUpdate">' + lastUpdated + '</span></a>');
+                            //$("#userLink").html('You' + lastUpdated);
                         }
-                        $("nav>ul").append('<li><a href="javascript:clearUserName()">Is this not ' + myUserName + '?</a></li>');
+                        $("nav>ul").append('<li id="clearLink"><a href="#">&nbsp;</a></li>');
+                        $("nav>ul").append('<li id="clearLink"><a href="javascript:clearUserName()">Is this not ' + myUserName + '?</a></li>');
                     }
                 });
-                
+
             }
 
             function onLocationFound(e) {

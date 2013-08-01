@@ -1,8 +1,8 @@
 package com.c2b2.openlatitude.service;
 
-import com.c2b2.openlatitude.entity.LatitudeUser;
 import com.c2b2.openlatitude.entity.Location;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -48,19 +48,12 @@ public class LocationService extends AbstractService {
     @Path("all")
     @Produces("application/json")
     public List<Location> findAll() {
-        List keys = getCache().getKeys();
-        Map<Object, Element> allElements = getCache().getAll(keys);
+        List<Location> users = Collections.emptyList();
 
-        List<Location> users = new ArrayList<Location>(keys.size());
-        for (Object key : keys) {
-            Element el = allElements.get(key);
-            Object o = el.getObjectValue();
-            if (o instanceof Location) {
-                Location u = (Location) o;
-                users.add(u);
-            } else {
-                throw new IllegalStateException("Object retrieved from Cache is not of type LatitudeUser: " + o.getClass());
-            }
+        List keys = getCache().getKeys();
+        if (keys != null && keys.size() > 0) {
+            Map<Object, Element> allElements = getCache().getAll(keys);
+            users = getValues(keys, allElements);
         }
 
         return users;
@@ -80,5 +73,22 @@ public class LocationService extends AbstractService {
         }
 
         LOG.info("Keys: " + getCache().getKeys());
+    }
+
+    private List<Location> getValues(List keys, Map<Object, Element> elements) throws IllegalStateException {
+        List<Location> users = new ArrayList<Location>(keys.size());
+        for (Object key : keys) {
+            Element el = elements.get(key);            
+            if (el != null) {
+                Object o = el.getObjectValue();
+                if (o instanceof Location) {
+                    Location u = (Location) o;
+                    users.add(u);
+                } else {
+                    throw new IllegalStateException("Object retrieved from Cache is not of type LatitudeUser: " + o.getClass());
+                }
+            }
+        }
+        return users;
     }
 }
